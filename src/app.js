@@ -1,13 +1,17 @@
 const express = require('express')
+const auth = require('./middlewares/middleware')
 
 const app = express()
 
-app.use( '/ass',  (req, res) => {
-    res.send("ass")
-})
+app.use('/test', auth)
 
-app.use( '/tits',  (req, res) => {
-    res.send("tits")
+app.get( '/test/:user',  (req, res, next) => {
+    console.log("9, a")
+
+    next()
+    // res.send(req.query)
+}, (req, res) => {
+    res.send("yo")
 })
 
 app.listen(8080, () => {
