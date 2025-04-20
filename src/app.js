@@ -1,14 +1,21 @@
 const express = require("express");
 const connectDb = require("./config/database");
 const User = require("./models/user");
+const bcrypt = require('bcrypt')
+
 const app = express();
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-  const newUser = new User(req.body);
+
+  const bodyCopy = req.body;
+  const hash = await bcrypt.hash(req.body.password, 12);
+  bodyCopy.password = hash;
+  console.log(bodyCopy)
+  const newUser = new User(bodyCopy);
   try {
-    const response = await User.findOne({ email: req.body.email });
+    const response = await User.findOne({ email: bodyCopy.email });
     if (response) {
       res.send("User already exists");
     }
@@ -22,6 +29,10 @@ app.post("/signup", async (req, res) => {
     res.status(400).send(error);
   }
 });
+
+app.post('/login', (req, res) => {
+     
+})
 
 app.post("/user", async (req, res) => {
   try {
@@ -84,8 +95,16 @@ app.delete("/deleteByEmail", async (req, res) => {
 
 app.patch("/update", async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.body._id, req.body, {runValidators : true});
-    res.send({ updated: req.body._id });
+    const allowed_updates = ["_id", "photoUrl", "about", "gender", "age", "skills"]
+    const isAllowed = (field) => allowed_updates.includes(field)
+    const validate = Object.keys(req.body).every(isAllowed)
+    if (!validate) {
+        res.status(401).send("Update Not Allowed")
+    } else {
+        await User.findByIdAndUpdate(req.body._id, req.body, {runValidators : true});
+        res.send({ updated: req.body._id });    
+    }
+    
   } catch (err) {
     res.status(500).send("something went wrong" + err.message);
   }
