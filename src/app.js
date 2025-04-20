@@ -2,17 +2,19 @@ const express = require("express");
 const connectDb = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require('bcrypt')
-
+const cookieParser = require('cookie-parser')
+var jwt = require('jsonwebtoken');
+const auth = require("./middlewares/middleware");
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
 
   const bodyCopy = req.body;
   const hash = await bcrypt.hash(req.body.password, 12);
   bodyCopy.password = hash;
-  console.log(bodyCopy)
   const newUser = new User(bodyCopy);
   try {
     const response = await User.findOne({ email: bodyCopy.email });
@@ -30,8 +32,37 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body
+
+    try {
+        const response = await User.findOne({ email : email})
+        if (response) {
+            const match = await bcrypt.compare(password, response.password)
+            if (match) {
+                const token = jwt.sign({ _id: response._id}, "tony@stark@42", { expiresIn: '1h' })
+                res.cookie('token', token, {expires: new Date(Date.now() + 1 * 3600000)})
+                res.send("Logged in")
+            }  else {
+                throw new Error("Invalid credentials")
+            }
+        } else {
+            throw new Error("Invalid credentials")
+        }
+    } catch (err) {
+        res.status(500).send("something went wrong " + err)
+    }
      
+})
+
+
+
+app.get('/profile',auth, (req, res) => {
+    res.send(req.response)
+})
+
+app.post('/sendRequest', auth, (req, res) => {
+  res.send(req.response.firstName + "sent request")
 })
 
 app.post("/user", async (req, res) => {
