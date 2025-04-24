@@ -53,8 +53,6 @@ userRouter.get('/feed', auth, async (req, res) => {
 
         const pageNo = parseInt(req.query.page) ?? 1
         const limit = parseInt(req.query.limit) ?? 10
-        console.log(pageNo)
-        console.log(limit)
         const loggedInUser = req.response
         const mySentAndRevievedRequests = await requestModel.find({ $or: [{fromId: loggedInUser._id+''}, {toId: loggedInUser._id+''}]})
         
