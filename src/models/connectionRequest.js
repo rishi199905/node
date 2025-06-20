@@ -12,7 +12,7 @@ const requestSchema = new mongoose.Schema({
     status:{
         type: String,
         enum: {
-            values:["accepted", "rejected", "interested", "ignore"],
+            values:["accepted", "rejected", "interested", "ignored"],
             message: '{VALUE} is not valid'
         }
     }

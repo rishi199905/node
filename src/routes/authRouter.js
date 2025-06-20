@@ -21,7 +21,9 @@ authRouter.post("/signup", async (req, res) => {
   }
   try {
     const response = await newUser.save();
-    res.send({ saved: response });
+    const token = jwt.sign({ _id: response._id}, "tony@stark@42", { expiresIn: '1h' })
+    res.cookie('token', token, {expires: new Date(Date.now() + 8 * 3600000)})
+    res.json({ message:"User Signed Up!", data: response})
   } catch (error) {
     res.status(400).send(error);
   }
@@ -33,19 +35,20 @@ authRouter.post('/login', async (req, res) => {
     try {
         const response = await User.findOne({ email : email})
         if (response) {
+          
             const match = await bcrypt.compare(password, response.password)
             if (match) {
                 const token = jwt.sign({ _id: response._id}, "tony@stark@42", { expiresIn: '1h' })
-                res.cookie('token', token, {expires: new Date(Date.now() + 1 * 3600000)})
-                res.send("Logged in")
+                res.cookie('token', token, {expires: new Date(Date.now() + 8 * 3600000)})
+                res.send(response)
             }  else {
-                throw new Error("Invalid credentials")
+                throw new Error("Invalid password")
             }
         } else {
-            throw new Error("Invalid credentials")
+            throw new Error("Invalid email")
         }
     } catch (err) {
-        res.status(500).send("something went wrong " + err)
+        res.status(400).send("something went wrong " + err)
     }
      
 })

@@ -1,3 +1,4 @@
+const http = require('http')
 const express = require("express");
 const connectDb = require("./config/database");
 const User = require("./models/user");
@@ -6,16 +7,25 @@ const authRouter = require('./routes/authRouter')
 const profileRouter = require('./routes/profileRouter')
 const requestRouter = require('./routes/requestRouter');
 const userRouter = require("./routes/userRouter");
+const cors = require('cors')
 const app = express();
-
+const initialiseSocket = require('./socket');
+const chatRouter = require('./routes/chatRouter');
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
 app.use('/', authRouter)
 app.use('/', profileRouter)
 app.use('/', requestRouter)
 app.use('/', userRouter)
+app.use('/', chatRouter)
 
+const server = http.createServer(app);
+initialiseSocket(server);
 
 app.get("/feed", async (req, res) => {
   try {
@@ -67,7 +77,7 @@ app.delete("/deleteByEmail", async (req, res) => {
 connectDb()
   .then(() => {
     console.log("connected");
-    app.listen(8080, () => {
+    server.listen(8080, () => {
       console.log("listening");
     });
   })

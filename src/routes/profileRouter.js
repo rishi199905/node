@@ -30,8 +30,9 @@ profileRouter.patch("/profile/edit",auth, async (req, res) => {
       if (!validate) {
           res.status(401).send("Update Not Allowed")
       } else {
-          await User.findByIdAndUpdate(req.response._id +'', req.body, {runValidators : true});
-          res.send({ updated: req.response.firstName +''})
+          const response = await User.findByIdAndUpdate(req.response._id +'', req.body, {runValidators : true});
+
+          res.send(response)
       }
       
     } catch (err) {
